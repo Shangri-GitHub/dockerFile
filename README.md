@@ -1,0 +1,40 @@
+# dockerFile
+dockerFile include lentos timezone java node nginx
+
+#基于centos镜像
+FROM centos:7
+
+#维护人的信息
+MAINTAINER hanxing <467527309@qq.com>
+
+#设定时区
+RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+RUN echo 'Asia/Shanghai' >/etc/timezone
+
+
+#将jdk1.8.0_211先下载到本地放在跟本文件同一个目录添加到镜像centos的/usr/local/目录下，并命名为jdk
+ADD jdk-8u211-linux-x64.tar.gz /usr/local/
+
+#添加java环境变量
+ENV JAVA_HOME /usr/local/jdk1.8.0_211
+ENV CLASSPATH $JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+ENV PATH $PATH:$JAVA_HOME/bin
+
+#设置node环境
+ADD node-v10.16.0-linux-x64.tar.xz /usr/local/
+#添加node环境变量
+ENV NODE_HOME /usr/local/node-v10.16.0-linux-x64
+ENV PATH $PATH:$NODE_HOME/bin
+
+
+# nginx 安装
+RUN yum install -y pcre-devel wget net-tools gcc zlib zlib-devel make openssl-devel  
+RUN useradd -M -s /sbin/nologin nginx
+ADD http://nginx.org/download/nginx-1.6.2.tar.gz .
+RUN tar zxvf nginx-1.6.2.tar.gz 
+RUN mkdir -p /usr/local/nginx  
+RUN cd nginx-1.6.2 && ./configure --prefix=/usr/local/nginx --user=nginx --group=nginx --with-http_stub_status_module && make && make install
+RUN ln -s /usr/local/nginx/sbin/* /usr/local/sbin/ 
+EXPOSE 80               
+#启动Nginx服务
+CMD ["nginx"]
